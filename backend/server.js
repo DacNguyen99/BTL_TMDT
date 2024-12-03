@@ -11,6 +11,14 @@ import {
 } from "@paypal/paypal-server-sdk";
 import bodyParser from "body-parser";
 import { createClient } from '@supabase/supabase-js'
+import fx from "money";
+
+// Set exchange rates and base currency
+fx.base = "VND";  // Set the base currency to VND
+fx.rates = {
+    VND: 1,        // 1 VND = 1 VND
+    USD: 0.000039,  // Example rate: 1 VND = 0.000042 USD (you can replace this with the actual rate)
+};
 
 dotenv.config();
 const accessToken = "A21AAKfkBl5ruoTptEo1J2hnfj2ySZHJAFAtQP1sQ1_P0iR0eBSKCiySsXifdBq2_HxYP1P7bmgyQ7KOFDfcNbqAympdkcCJg"
@@ -54,6 +62,8 @@ const ordersController = new OrdersController(client);
  * @see https://developer.paypal.com/docs/api/orders/v2/#orders_create
  */
 const createOrder = async (totalAmount) => {
+  totalAmount = fx(totalAmount).from("VND").to("USD");
+  console.log("Converted amount:", totalAmount);
   const collect = {
     body: {
       intent: CheckoutPaymentIntent.Capture,
@@ -61,7 +71,7 @@ const createOrder = async (totalAmount) => {
         {
           amount: {
             currencyCode: "USD",
-            value: totalAmount, // Use the totalAmount passed from the frontend
+            value: totalAmount.toLocaleString("en-US"), // Use the totalAmount passed from the frontend
           },
         },
       ],
